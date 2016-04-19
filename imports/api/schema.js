@@ -9,6 +9,7 @@ type Email {
 type User {
   emails: [Email]
   randomString: String
+  error: String
 }
 
 type Query {
@@ -32,5 +33,8 @@ export const resolvers = {
   User: {
     emails: ({emails}) => emails,
     randomString: () => Random.id(),
+    error: () => {
+      throw new Error('this is broken!');
+    }
   }
 }

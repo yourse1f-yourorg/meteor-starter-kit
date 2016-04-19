@@ -31,6 +31,7 @@ const AppWithData = connect({
                   verified
                 }
                 randomString
+                error
               }
             }
           `,
