@@ -37,3 +37,6 @@ Meteor.startup(() => {
     <App />
   </Provider>, document.getElementById('app'));
 });
+
+// Set up no-op 'gql' template string to tell the linter which strings are GraphQL queries
+global.gql = (strings) => { return strings[0] };
