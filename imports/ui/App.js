@@ -8,43 +8,78 @@ Accounts.ui.config({
   passwordSignupFields: 'USERNAME_ONLY'
 });
 
-const App = ({ userId, currentUser }) => {
+const App = ({ userId, data, mutate }) => {
   return (
     <div>
       <Accounts.ui.LoginForm />
-      { userId ? (
-        <div>
-          <pre>{JSON.stringify(currentUser, null, 2)}</pre>
-          <button onClick={() => currentUser.refetch()}>Refetch!</button>
-        </div>
-      ) : 'Please log in!' }
+      { data.loading ? "Loading..." : <Users users={data.users} /> }
+      { userId && <PostNote mutate={mutate} refetch={data.refetch}/> }
     </div>
   )
 }
 
+const Users = ({ users }) => (
+  <ul>
+    { users.map(({ username, notes }) => (
+      <li>
+        <h3>{ username }</h3>
+        <ul>
+          { notes.map(({ private, text }) => (
+            <p>{ (private ? "🔒 " : "") + text }</p>
+          )) }
+        </ul>
+      </li>
+    )) }
+  </ul>
+)
+
+const PostNote = ({ mutate, refetch }) => {
+  function onSubmit(event) {
+    event.preventDefault();
+
+    mutate({
+      mutation: `
+        mutation postReply($text: String!, $private: Boolean) {
+          createNote(text: $text, private: $private)
+        }
+      `,
+      variables: {
+        text: event.target.text.value,
+        private: event.target.private.checked,
+      }
+    }).then(() => refetch())
+  }
+
+  return (
+    <form onSubmit={onSubmit}>
+      <input name="text" />
+      <label>
+        Private
+        <input type="checkbox" name="private" />
+      </label>
+    </form>
+  );
+};
+
 // This container brings in Apollo GraphQL data
 const AppWithData = connect({
-  mapQueriesToProps({ ownProps }) {
-    if (ownProps.userId) {
-      return {
-        currentUser: {
-          query: `
-            query getUserData ($id: String!) {
-              user(id: $id) {
-                emails {
-                  address
-                  verified
-                }
-                randomString
+  mapQueriesToProps() {
+    return {
+      data: {
+        query: `
+          {
+            users {
+              username
+              notes {
+                private
+                text
               }
             }
-          `,
-          variables: {
-            id: ownProps.userId,
-          },
-        },
-      };
-    }
+          }
+        `,
+        forceFetch: true,
+      },
+    };
   },
 })(App);
 
