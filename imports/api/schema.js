@@ -26,7 +26,7 @@ export const resolvers = {
   Query: {
     user(root, args, context) {
       // Only return the current user, for security
-      if (context.userId === args.id) {
+      if (context && context.userId && context.userId === args.id) {
         return context.user;
       }
     },
